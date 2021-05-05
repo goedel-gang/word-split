@@ -20,6 +20,9 @@ letter_set = set(string.ascii_lowercase + "_")
 
 DATA_DIR = pathlib.Path(__file__).parent / "data"
 
+WORD_REGEX = r"[^.?!:;]+|[.?!:;]+"
+ALLOWED_CHARS = set(string.ascii_lowercase + ".?!:;")
+
 def strip_stream(plain):
     return "".join(re.findall("[a-z]", plain.read().lower()))
 
@@ -160,13 +163,22 @@ def split_words(preftree, dense_str):
         yield nxt
         pos += len(strip_punc(nxt))
 
+def get_words(segments, working_tree):
+    for segment in segments:
+        if segment.isalpha():
+            yield from split_words(working_tree, segment)
+        else:
+            yield segment
+
 def main(args):
     start = time.time()
     print("initialising..")
     preftree = build_pt(args)
     print("initialised from data/words (took {:.3f} secs)"
             .format(time.time() - start))
-    plaintext = str(strip_stream(args.input))
+    input_text = "".join(c for c in args.input.read().lower()
+                         if c in ALLOWED_CHARS)
+    segments = re.findall(WORD_REGEX, input_text)
     while True:
         try:
             working_tree = amend_pt(preftree)
@@ -174,7 +186,7 @@ def main(args):
         except NothingChanged:
             print(".", end="", flush=True)
         else:
-            print(" ".join(split_words(working_tree, plaintext)))
+            print(" ".join(get_words(segments, working_tree)))
             if not args.watch:
                 break
         time.sleep(args.time)
