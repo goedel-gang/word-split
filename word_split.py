@@ -23,9 +23,6 @@ DATA_DIR = pathlib.Path(__file__).parent / "data"
 WORD_REGEX = r"[^.?!:;]+|[.?!:;]+"
 ALLOWED_CHARS = set(string.ascii_lowercase + ".?!:;")
 
-def strip_stream(plain):
-    return "".join(re.findall("[a-z]", plain.read().lower()))
-
 def strip_punc(word):
     """
     Strip punctuation from word
@@ -158,7 +155,7 @@ def split_words(preftree, dense_str):
     """
     made_lower = dense_str.lower()
     pos = 0
-    while pos < len(dense_str) - 1:
+    while pos < len(dense_str):
         nxt = preftree.longest_word_from(made_lower, pos)
         yield nxt
         pos += len(strip_punc(nxt))
